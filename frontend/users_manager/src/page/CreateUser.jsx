@@ -69,18 +69,7 @@ export const CreateUser = ({setData}) => {
   };
 
 
-//   const fetchData = () => {
-    
-//     useEffect(() => {
-//         axios.get('http://localhost:3000/getUsers')
-//           .then(response => {
-//             setData(response.data.results);
-//           })
-//           .catch(error => {
-//             console.log(error)
-//           });
-//       }, []);
-//   }
+
   return (
     <>
       {/* <!-- Modal --> */}

@@ -2,6 +2,7 @@
 import { useState,useEffect } from "react";
 import { CreateUser } from "./CreateUser";
 import { useNavigate } from 'react-router-dom'; 
+import UploadCsv from "../componects/UploadCsv";
 import axios from 'axios';
 export const Users = () => {
 
@@ -53,8 +54,9 @@ export const Users = () => {
           <h4 className="text-primary">All users in the database!</h4>
         </div>
         <div>
+        <UploadCsv/>
         <button type="button" className="btn btn-primary mx-2" data-bs-toggle="modal" data-bs-target="#createUserModal">
-          เพิ่มผู้ใช้งานใหม่
+          Add user
         </button>
         <button onClick={handleLogout} className="btn btn-danger">
           Logout

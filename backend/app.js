@@ -3,6 +3,11 @@ const sql = require("./config/db.js");
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken'); 
+const multer = require('multer'); 
+const csvParser = require('csv-parser');
+const fs = require('fs'); 
+
+
 
 
 const app = express();
@@ -123,6 +128,77 @@ app.post('/login', async (req, res) => {
 });
 
 
+
+
+// API อัปโหลด.csv และ เพิ่มข้อมูลลงฐานข้อมูล
+const upload = multer({ dest: 'uploads/' });
+app.post('/uploadCsv', upload.single('file'), async (req, res) => {
+    const file = req.file;
+
+    if (!file) {
+        return res.status(400).json({ message: "Please upload a CSV file." });
+    }
+
+    const results = [];
+
+    // อ่านไฟล์ CSV และบันทึกข้อมูลลงฐานข้อมูล
+    fs.createReadStream(file.path)
+        .pipe(csvParser())
+        .on('data', (data) => {
+            results.push(data);
+        })
+        .on('end', async () => {
+            try {
+                const pool = await sql.connect();
+
+                // แทรกข้อมูลแต่ละแถว
+                for (const row of results) {
+                    const { name, email, password } = row;
+
+                    if (!name || !email || !password) {
+                        console.error("Invalid data:", row);
+                        continue; 
+                    }
+
+                    // ตรวจสอบว่า email ซ้ำหรือไม่
+                    const checkQuery = "SELECT COUNT(*) AS count FROM users WHERE email = @mail";
+                    const checkResult = await pool.request()
+                        .input('mail', sql.VarChar, email)
+                        .query(checkQuery);
+
+                    const count = checkResult.recordset[0].count;
+
+                    if (count > 0) {
+                        console.log(`Skipping duplicate email: ${email}`);
+                        continue;
+                    }
+
+                    // เข้ารหัสรหัสผ่าน
+                    const hashedPassword = await bcrypt.hash(password, 10);
+
+                    // แทรกข้อมูลลงในฐานข้อมูล
+                    const insertQuery = "INSERT INTO users (full_name, email, password) VALUES (@name, @mail, @pwd)";
+                    await pool.request()
+                        .input('name', sql.VarChar, name)
+                        .input('mail', sql.VarChar, email)
+                        .input('pwd', sql.VarChar, hashedPassword)
+                        .query(insertQuery);
+                }
+
+                // ลบไฟล์ที่อัปโหลดออก
+                fs.unlinkSync(file.path);
+
+                res.status(201).json({ message: "CSV data inserted successfully." });
+            } catch (error) {
+                console.error("Error processing CSV file:", error);
+                res.status(500).json({ message: "Failed to process CSV file.", error: error.message });
+            }
+        })
+        .on('error', (error) => {
+            console.error("Error reading CSV file:", error);
+            res.status(500).json({ message: "Failed to read CSV file.", error: error.message });
+        });
+});
 
 
 app.listen(PORT, (error) =>{

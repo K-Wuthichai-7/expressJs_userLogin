@@ -17,16 +17,16 @@ sql.connect(config, function(err) {
     }
     console.log("Connected to SQL Server");
 
-    var request = new sql.Request();
-    var query = "SELECT * FROM dbo.users"; // คำสั่ง SQL
+    // var request = new sql.Request();
+    // var query = "SELECT * FROM dbo.users"; // คำสั่ง SQL
 
-    request.query(query, function(err, records) {
-        if (err) {
-            console.log("Query Error: ", err);
-        } else {
-            console.log("Query Result: ", records.recordset); // แสดงผลข้อมูล
-        }
-    });
+    // request.query(query, function(err, records) {
+    //     if (err) {
+    //         console.log("Query Error: ", err);
+    //     } else {
+    //         console.log("Query Result: ", records); // แสดงผลข้อมูล
+    //     }
+    // });
 });
 
 module.exports = sql;
